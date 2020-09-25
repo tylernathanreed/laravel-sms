@@ -9,6 +9,7 @@
     - [Configuring the View](#configuring-the-view)
     - [View Data](#view-data)
 - [Sending Text Messages](#sending-text-messages)
+    - [Closure Messages](#closure-messages)
     - [Queueing Messages](#queueing-messages)
 - [Rendering Textables](#rendering-textables)
     - [Previewing Textables in the Browser](#previewing-textables-in-the-browser)
@@ -213,6 +214,8 @@ Once the data has been set to a public property, it will automatically be availa
         Price: {{ $order->price }}
     </div>
 
+> **Note:** A `$message` variable is always passed to sms views, so you should avoid passing a `message` variable in your view payload.
+
 #### Via the `with` Method:
 
 If you would like to customize the format of your text message's data before it is sent to the template, you may manually pass your data to the view via the `with` method. Typically, you will still pass data via the textable class' constructor; however, you should set this data to `protected` or `private` properties so the data is not automatically made available to the template. Then, when calling the `with` method, pass an array of data that you wish to make available to the template:
@@ -320,6 +323,49 @@ By default, the sms provider configured as the `default` provider in your `sms` 
     SMS::provider('twilio')
         ->to($request->user())
         ->send(new OrderShipped($order));
+
+<a name="closure-messages"></a>
+### Closure Messages
+
+If using textables isn't something you want to do, you can also send text messages by using a closure implementation. To send a closure-based message, use the `send` method on the `SMS` facade, and provide it three arguments. First, the name of a `view` that contains the text messages. Secondly, an array of data that you wish to pass to the view. Lastly, a `Closure` callback which receives a message instance, allowing you to customize the recipients, body, and other aspects of the sms message:
+
+    <?php
+
+    namespace App\Http\Controllers;
+
+    use App\Http\Controllers\Controller;
+    use App\Mail\OrderShipped;
+    use App\Models\Order;
+    use Illuminate\Http\Request;
+    use Reedware\LaravelSMS\SMS;
+
+    class OrderController extends Controller
+    {
+        /**
+         * Ships the given order.
+         *
+         * @param  \Illuminate\Http\Request  $request
+         * @param  integer                   $orderId
+         *
+         * @return \Illuminate\Http\Response
+         */
+        public function ship(Request $request, $orderId)
+        {
+            $order = Order::findOrFail($orderId);
+
+            // Ship order...
+
+            SMS::send('sms.orders.shipped', ['order' => $order], function($m) use ($request) {
+                $m->to($request()->user->number);
+            });
+        }
+    }
+
+If you want to send a plain message instead, you can instead use the `raw` method on the `SMS` facade:
+
+    SMS::raw('Your order has been shipped!', function($m) use ($request) {
+        $m->to($request()->user->number);
+    });
 
 <a name="queueing-messages"></a>
 ### Queueing Messages

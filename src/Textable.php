@@ -225,7 +225,7 @@ class Textable implements TextableContract, Renderable
     protected function buildFrom($message)
     {
         if (! empty($this->from)) {
-            $message->from($this->from);
+            $message->from($this->from[0]['number'], $this->from[0]['carrier']);
         }
 
         return $this;
@@ -241,7 +241,7 @@ class Textable implements TextableContract, Renderable
     protected function buildRecipients($message)
     {
         foreach ($this->to as $recipient) {
-            $message->to($recipient);
+            $message->to($recipient['number'], $recipient['carrier']);
         }
 
         return $this;

@@ -3,17 +3,18 @@
 namespace Reedware\LaravelSMS;
 
 use Illuminate\Contracts\Events\Dispatcher;
-use Reedware\LaravelSMS\Contracts\Textable as TextableContract;
-use Reedware\LaravelSMS\Contracts\Provider as ProviderContract;
-use Reedware\LaravelSMS\Contracts\MessageQueue as MessageQueueContract;
-use Reedware\LaravelSMS\Contracts\Transport as TransportContract;
 use Illuminate\Contracts\Queue\Factory as QueueContract;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Contracts\View\Factory as ViewFactory;
-use Reedware\LaravelSMS\Events\MessageSending;
-use Reedware\LaravelSMS\Events\MessageSent;
 use Illuminate\Support\Traits\Macroable;
 use InvalidArgumentException;
+use Reedware\LaravelSMS\Contracts\MessageQueue as MessageQueueContract;
+use Reedware\LaravelSMS\Contracts\Provider as ProviderContract;
+use Reedware\LaravelSMS\Contracts\Textable as TextableContract;
+use Reedware\LaravelSMS\Contracts\Transport as TransportContract;
+use Reedware\LaravelSMS\Events\MessageSending;
+use Reedware\LaravelSMS\Events\MessageSent;
+use Throwable;
 
 class Provider implements ProviderContract, MessageQueueContract
 {
@@ -206,9 +207,16 @@ class Provider implements ProviderContract, MessageQueueContract
             return;
         }
 
-        $this->sendMessage($message);
+        try {
+            $this->sendMessage($message);
 
-        $this->dispatchSentEvent($message, $data);
+            $this->dispatchSentEvent($message, $data);
+
+        }
+
+        catch(Throwable $exception) {
+            $this->dispatchFailedEvent($message, $data, $exception);
+        }
     }
 
     /**
@@ -395,7 +403,7 @@ class Provider implements ProviderContract, MessageQueueContract
      *
      * @param  Reedware\LaravelSMS\Message  $message
      *
-     * @return integer|null
+     * @return integer
      */
     protected function sendMessage($message)
     {
@@ -412,7 +420,7 @@ class Provider implements ProviderContract, MessageQueueContract
      *
      * @return boolean
      */
-    protected function shouldSendMessage($message, $data = [])
+    protected function shouldSendMessage($message, $data)
     {
         if (! $this->events) {
             return true;
@@ -431,7 +439,7 @@ class Provider implements ProviderContract, MessageQueueContract
      *
      * @return void
      */
-    protected function dispatchSentEvent($message, $data = [])
+    protected function dispatchSentEvent($message, $data)
     {
         if (!$this->events) {
             return;
@@ -440,6 +448,34 @@ class Provider implements ProviderContract, MessageQueueContract
         $this->events->dispatch(
             new MessageSent($message, $data)
         );
+    }
+
+    /**
+     * Dispatches the message failed event.
+     *
+     * @param  \Reedware\LaravelSMS\Message  $message
+     * @param  array                         $data
+     * @param  \Throwable                    $exception
+     *
+     * @return void
+     *
+     * @throws \Reedware\LaravelSMS\Exceptions\SMSException
+     */
+    protected function dispatchFailedEvent($message, $data, Throwable $exception)
+    {
+        $exception = new SMSException($exception->getMessage(), $exception->getCode(), $exception);
+
+        if (!$this->events) {
+            throw $exception;
+        }
+
+        $catch = $this->events->until(
+            new MessageFailed($message, $data, $exception)
+        );
+
+        if(!is_null($catch)) {
+            throw $exception;
+        }
     }
 
     /**

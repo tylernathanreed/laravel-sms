@@ -2,12 +2,12 @@
 
 namespace Reedware\LaravelSMS;
 
-use Illuminate\Support\Facades\Facade as BaseFacade;
+use Illuminate\Support\Facades\Facade;
 
 /**
- * @see \Reedware\LaravelSMS\Provider
+ * @see \Reedware\LaravelSMS\SMSProvider
  */
-class Facade extends BaseFacade
+class SMS extends Facade
 {
     /**
      * Returns the registered name of the component.

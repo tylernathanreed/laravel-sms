@@ -494,7 +494,7 @@ class Textable implements TextableContract, Renderable
      *
      * @return $this
      */
-    public function withMessage(callable $callback)
+    public function withTransportMessage(callable $callback)
     {
         $this->callbacks[] = $callback;
 

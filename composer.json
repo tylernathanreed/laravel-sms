@@ -36,7 +36,7 @@
                 "Reedware\\LaravelSMS\\SMSServiceProvider"
             ],
             "aliases": {
-                "SMS": "Reedware\\LaravelSMS\\Facade"
+                "SMS": "Reedware\\LaravelSMS\\SMS"
             }
         }
     }

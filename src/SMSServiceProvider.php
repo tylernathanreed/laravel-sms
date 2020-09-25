@@ -4,6 +4,9 @@ namespace Reedware\LaravelSMS;
 
 use Illuminate\Contracts\Support\DeferrableProvider;
 use Illuminate\Support\ServiceProvider;
+use Reedware\LaravelSMS\Contracts\Factory as FactoryContract;
+use Reedware\LaravelSMS\Contracts\MessageQueue as MessageQueueContract;
+use Reedware\LaravelSMS\Contracts\Provider as ProviderContract;
 
 class SMSServiceProvider extends ServiceProvider implements DeferrableProvider
 {
@@ -35,6 +38,12 @@ class SMSServiceProvider extends ServiceProvider implements DeferrableProvider
         $this->app->bind('sms', function ($app) {
             return $app->make('sms.manager')->driver();
         });
+
+        $this->app->alias('sms.manager', SMSManager::class);
+        $this->app->alias('sms.manager', FactoryContract::class);
+        $this->app->alias('sms', Provider::class);
+        $this->app->alias('sms', ProviderContract::class);
+        $this->app->alias('sms', MessageQueueContract::class);
     }
 
     /**

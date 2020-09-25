@@ -283,8 +283,8 @@ To send a message, use the `to` method on the `SMS` facade. The `to` method acce
     namespace App\Http\Controllers;
 
     use App\Http\Controllers\Controller;
-    use App\Mail\OrderShipped;
     use App\Models\Order;
+    use App\SMS\OrderShipped;
     use Illuminate\Http\Request;
     use Reedware\LaravelSMS\SMS;
 
@@ -334,7 +334,6 @@ If using textables isn't something you want to do, you can also send text messag
     namespace App\Http\Controllers;
 
     use App\Http\Controllers\Controller;
-    use App\Mail\OrderShipped;
     use App\Models\Order;
     use Illuminate\Http\Request;
     use Reedware\LaravelSMS\SMS;

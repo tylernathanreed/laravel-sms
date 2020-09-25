@@ -1,0 +1,43 @@
+{
+    "name": "reedware/laravel-sms",
+    "description": "Adds the ability to send text messages through various drivers.",
+    "keywords": ["laravel", "sms"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Tyler Reed",
+            "email": "tylernathanreed@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^7.2",
+        "illuminate/contracts": "^6.0|^7.0|^8.0",
+        "illuminate/support": "^6.0|^7.0|^8.0"
+    },
+    "require-dev": {
+        "mockery/mockery": "^1.3.1",
+        "laravel/framework": "^6.0|^7.0|^8.0",
+        "orchestra/testbench-core": "^4.0|^5.0|^6.0",
+        "phpunit/phpunit": "^8.3|^9.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Reedware\\LaravelSMS\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Reedware\\LaravelSMS\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Reedware\\LaravelSMS\\SMSServiceProvider"
+            ],
+            "aliases": {
+                "SMS": "Reedware\\LaravelSMS\\Facade"
+            }
+        }
+    }
+}

@@ -34,7 +34,7 @@ Several driver implementations have been offloaded into separate packages so tha
 * Array
 * Email
 * Log
-* Twilio (`reedware/laravel-sms-twilio`)
+* Twilio (requires [reedware/laravel-sms-twilio](https://github.com/tylernathanreed/laravel-sms-twilio))
 
 This package was also built such that anyone can add or override existing drivers, so that you aren't limited by what is provided out of the box.
 
@@ -87,6 +87,8 @@ Additionally, ssl host and peer verification is disabled by default. To enable t
         'auth_token' => 'your-twilio-auth-token',
         'verify' => true
     ],
+
+Additional instructions can be found in the [Laravel SMS Twilio](https://github.com/tylernathanreed/laravel-sms-twilio) package documentation.
 
 <a name="generating-textables"></a>
 ## Generating Textables

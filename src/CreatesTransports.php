@@ -15,22 +15,24 @@ trait CreatesTransports
     /**
      * Create a new transport instance.
      *
-     * @param  array  $config
-     * @return \Swift_Transport
+     * @param  string  $name
+     * @param  array   $config
+     *
+     * @return \Reedware\LaravelSMS\Contracts\Transport
      */
-    public function createTransport(array $config)
+    public function createTransport($name, array $config)
     {
         $transport = $config['transport'];
 
         if (isset($this->customCreators[$transport])) {
-            return call_user_func($this->customCreators[$transport], $config);
+            return call_user_func($this->customCreators[$transport], $this->app, $name, $config);
         }
 
         if (trim($transport) === '' || ! method_exists($this, $method = 'create' . ucfirst($transport) . 'Transport')) {
             throw new InvalidArgumentException("Unsupported SMS Transport [{$transport}].");
         }
 
-        return $this->{$method}($config);
+        return $this->{$method}($name, $config);
     }
 
     /**
@@ -46,11 +48,12 @@ trait CreatesTransports
     /**
      * Creates an instance of the email sms transport driver.
      *
-     * @param  array  $config
+     * @param  string  $name
+     * @param  array   $config
      *
      * @return \Reedware\LaravelSMS\Transport\EmailTransport
      */
-    protected function createEmailTransport(array $config)
+    protected function createEmailTransport($name, array $config)
     {
         $mailer = $this->app->make(MailerContract::class);
 
@@ -60,16 +63,17 @@ trait CreatesTransports
     /**
      * Creates an instance of the log sms transport driver.
      *
-     * @param  array  $config
+     * @param  string  $name
+     * @param  array   $config
      *
      * @return \Reedware\LaravelSMS\Transport\LogTransport
      */
-    protected function createLogTransport(array $config)
+    protected function createLogTransport($name, array $config)
     {
         $logger = $this->app->make(LoggerInterface::class);
 
         if ($logger instanceof LogManager) {
-            $logger = $logger->channel($config['channel']);
+            $logger = $logger->channel($config['channel'] ?? $name);
         }
 
         return new LogTransport($logger);

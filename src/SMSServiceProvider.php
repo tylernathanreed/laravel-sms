@@ -4,6 +4,7 @@ namespace Reedware\LaravelSMS;
 
 use Illuminate\Contracts\Support\DeferrableProvider;
 use Illuminate\Support\ServiceProvider;
+use Reedware\LaravelSMS\Console\SMSMakeCommand;
 use Reedware\LaravelSMS\Contracts\Factory as FactoryContract;
 use Reedware\LaravelSMS\Contracts\MessageQueue as MessageQueueContract;
 use Reedware\LaravelSMS\Contracts\Provider as ProviderContract;
@@ -17,19 +18,16 @@ class SMSServiceProvider extends ServiceProvider implements DeferrableProvider
      */
     public function register()
     {
-        $this->registerTexter();
-
-        $this->mergeConfigFrom(
-            $this->configPath(), 'sms'
-        );
+        $this->registerServices();
+        $this->registerConfiguration();
     }
 
     /**
-     * Register the sms instance.
+     * Registers the package services.
      *
      * @return void
      */
-    protected function registerTexter()
+    protected function registerServices()
     {
         $this->app->singleton('sms.manager', function ($app) {
             return new SMSManager($app);
@@ -39,23 +37,69 @@ class SMSServiceProvider extends ServiceProvider implements DeferrableProvider
             return $app->make('sms.manager')->driver();
         });
 
-        $this->app->alias('sms.manager', SMSManager::class);
-        $this->app->alias('sms.manager', FactoryContract::class);
-        $this->app->alias('sms', Provider::class);
-        $this->app->alias('sms', ProviderContract::class);
-        $this->app->alias('sms', MessageQueueContract::class);
+        $allAliases = [
+            'sms' => [Provider::class, ProviderContract::class, MessageQueueContract::class],
+            'sms.manager' => [SMSManager::class, FactoryContract::class]
+        ];
+
+        foreach($allAliases as $key => $aliases) {
+            foreach($aliases as $alias) {
+                $this->app->alias($key, $aliases);
+            }
+        }
     }
 
     /**
-     * Bootstrap any application services.
+     * Registers the package configuration.
+     *
+     * @return void
+     */
+    protected function registerConfiguration()
+    {
+        $this->mergeConfigFrom(
+            $this->configPath(), 'sms'
+        );
+    }
+
+    /**
+     * Bootstraps the package services.
      *
      * @return void
      */
     public function boot()
     {
+        $this->publishConfiguration();
+        $this->registerCommands();
+    }
+
+    /**
+     * Publishes the package configuration.
+     *
+     * @return void
+     */
+    protected function publishConfiguration()
+    {
         $this->publishes([
             $this->configPath() => $this->app->configPath('sms.php'),
         ]);
+    }
+
+    /**
+     * Registers the package commands.
+     *
+     * @return void
+     */
+    protected function registerCommands()
+    {
+        if(!$this->app->runningInConsole()) {
+            return;
+        }
+
+        $this->app->singleton('command.sms.make', function($app) {
+            return new SMSMakeCommand($app['files']);
+        });
+
+        $this->app->commands(['command.sms.make']);
     }
 
     /**

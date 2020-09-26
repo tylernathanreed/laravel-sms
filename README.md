@@ -20,6 +20,8 @@
 - [Localizing Textables](#localizing-textables)
 - [SMS & Local Development](#sms-and-local-development)
 - [Events](#events)
+- [Adding Custom Providers](#adding-custom-providers)
+    - [Deferred Registration](#deferred-registration)
 
 <a name="introduction"></a>
 ## Introduction
@@ -490,7 +492,9 @@ Another solution is to set a universal recipient of all text messages sent by th
 <a name="events"></a>
 ## Events
 
-Two events are fired during the process of sending text messages. The `MessageSending` event is fired prior to a message being sent, while the `MessageSent` event is fired after a message has been sent. Remember, these events are fired when the text message is being *sent*, not when it is queued. You may register an event listener for this event in your `EventServiceProvider`:
+Two events are fired during the process of sending text messages. The `MessageSending` event is fired prior to a message being sent, while the `MessageSent` event is fired after a message has been sent. Additionally, the `MessageFailed` event is fired when transport of a text message was unsuccessful. Remember, these events are fired when the text message is being *sent*, not when it is queued.
+
+You may register an event listener for this event in your `EventServiceProvider`:
 
     /**
      * The event listener mappings for the application.
@@ -504,4 +508,84 @@ Two events are fired during the process of sending text messages. The `MessageSe
         'Reedware\LaravelSMS\Events\MessageSent' => [
             'App\Listeners\LogSentMessage',
         ],
+        'Reedware\LaravelSMS\Events\MessageFailed' => [
+            'App\Listeners\LogFailedMessage',
+        ]
     ];
+
+<a name="adding-custom-providers"></a>
+## Adding Custom Providers
+
+You may define your own sms providers using the `extend` method on the `SMS` facade. You should place this call to `extend` within a service provider. For a basic example, we're going to use the `AppServiceProvider` that ships with Laravel applications, but ideally you would want a dedicated service provider. Here's the code that we can place in that provider:
+
+    <?php
+    
+    namespace App\Providers;
+
+    use App\Services\SMS\CallfireTransport;
+    use GuzzleHttp\Client;
+    use Illuminate\Support\ServiceProvider;
+    
+    class AppServiceProvider extends ServiceProvider
+    {
+        /**
+         * Bootstraps the application services.
+         *
+         * @return void
+         */
+        public function boot()
+        {
+            SMS::extend('callfire', function($app, $name, array $config) {
+                // Return an instance of Reedware\LaravelSMS\Contracts\Transport...
+                
+                return new CallfireTransport(new Client, $config['username'], $config['password']);
+            });
+        }
+    }
+    
+As you can see in the example above, the callback passed to the `extend` method should return an implementation of `Reedware\LaravelSMS\Contracts\Transport`. This interface contains the methods you will need to implement to define a custom sms provider. Once your custom sms provider has been defined, you may use this provider in the `providers` configuration of your `sms.php` configuration file:
+
+    'providers' => [
+        'callfire' => [
+            'transport' => 'callfire',
+            'username' => 'my-callfire-username',
+            'password' => 'my-callfire-password'
+        ]
+    ]
+
+If you need working examples to get started, you can look at any of the `reedware/laravel-sms-*` packages, as these define custom sms providers.
+
+<a name="deferred-registration"></a>
+### Deferred Registration
+
+When it comes to registering a custom sms provider, the simplified example above used the `SMS` facade. However, the `SMS` service is deferred, meaning it won't be initialized until it is invoked for the first time. By invoking it within a service provider, you are essentially forcibly booting the `SMS` service. The overhead runtime cost of this is low, since this package is fairly lightweight, but for much larger applications this may not be ideal. For smaller applications, this performance difference is likely negligble.
+
+The more performance friendly version involves extending the `SMS` service *after* it has been booted, rather than booting the `SMS` service only to extend it, and possibly never using it for the current request. Here's a modified example similar to the one above, but using deferred registration instead:
+
+    <?php
+    
+    namespace App\Providers;
+   
+    use App\Services\SMS\CallfireTransport;
+    use GuzzleHttp\Client;
+    use Illuminate\Support\ServiceProvider;
+    use Reedware\LaravelSMS\Events\ManagerBooted;
+    
+    class AppServiceProvider extends ServiceProvider
+    {
+        /**
+         * Bootstraps the application services.
+         *
+         * @return void
+         */
+        public function boot()
+        {
+            $this->app['events']->listen(ManagerBooted::class, function($event) {
+                $event->manager->extend('callfire', function($app, $name, array $config) {
+                    return new CallfireTransport(new Client, $config['username'], $config['password']);
+                });
+            });
+        }
+    }
+
+This implementation listens to an event that is fired after the `SMS` service has been booted, which does not boot the service itself. Again, the only real overhead runtime cost saved here for requests that *don't* use the `SMS` service, and therefore shouldn't have to boot the `SMS` service or define your new sms provider. This cost is typically measured in milliseconds, but for large applications that use several third-party packages, any time saved is valuable.

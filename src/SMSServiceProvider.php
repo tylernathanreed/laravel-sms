@@ -44,7 +44,7 @@ class SMSServiceProvider extends ServiceProvider implements DeferrableProvider
 
         foreach($allAliases as $key => $aliases) {
             foreach($aliases as $alias) {
-                $this->app->alias($key, $aliases);
+                $this->app->alias($key, $alias);
             }
         }
     }

@@ -99,7 +99,7 @@ class SMSServiceProvider extends ServiceProvider implements DeferrableProvider
             return new SMSMakeCommand($app['files']);
         });
 
-        $this->app->commands(['command.sms.make']);
+        $this->commands(['command.sms.make']);
     }
 
     /**

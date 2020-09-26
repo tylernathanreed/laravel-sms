@@ -117,7 +117,7 @@ class SMSManager implements FactoryContract
         $provider = new Provider(
             $name,
             $this->app['view'],
-            $this->createTransport($config),
+            $this->createTransport($name, $config),
             $this->app['events']
         );
 

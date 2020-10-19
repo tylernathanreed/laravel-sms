@@ -463,7 +463,7 @@ class Provider implements ProviderContract, MessageQueueContract
      */
     protected function dispatchFailedEvent($message, $data, Throwable $exception)
     {
-        $exception = new SMSException($exception->getMessage(), $exception->getCode(), $exception);
+        $exception = new Exceptions\SMSException($exception->getMessage(), $exception->getCode(), $exception);
 
         if (!$this->events) {
             throw $exception;

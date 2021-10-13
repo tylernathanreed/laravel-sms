@@ -13,6 +13,7 @@ use Reedware\LaravelSMS\Contracts\Provider as ProviderContract;
 use Reedware\LaravelSMS\Contracts\Textable as TextableContract;
 use Reedware\LaravelSMS\Contracts\Transport as TransportContract;
 use Reedware\LaravelSMS\Events\MessageSending;
+use Reedware\LaravelSMS\Events\MessageFailed;
 use Reedware\LaravelSMS\Events\MessageSent;
 use Throwable;
 

@@ -1,7 +1,7 @@
 # Laravel SMS
 
 [![Latest Stable Version](https://poser.pugx.org/reedware/laravel-sms/v/stable)](https://packagist.org/packages/reedware/laravel-sms)
-[![Laravel Version](https://img.shields.io/badge/Laravel-6.x--8.x-blue)](https://laravel.com/)
+[![Laravel Version](https://img.shields.io/badge/Laravel-8.x--10.x-blue)](https://laravel.com/)
 [![Build Status](https://github.com/tylernathanreed/laravel-sms/workflows/tests/badge.svg)](https://github.com/tylernathanreed/laravel-sms/actions)
 
 - [Introduction](#introduction)
